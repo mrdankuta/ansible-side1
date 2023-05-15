@@ -1,0 +1,45 @@
+---
+- name: Install node and npm
+  hosts: 34.79.224.214
+  become: yes
+  tasks:
+    - name: Update apt repo and cache
+      apt:
+        update_cache: yes
+        force_apt_get: yes
+        cache_valid_time: 3600
+    - name: Install Nodejs and npm
+      apt:
+        pkg:
+          - nodejs
+          - npm
+
+# - name: Create new user for node app
+#   hosts: 34.79.224.214
+#   become: yes
+#   tasks:
+#     - name: Create Linux user
+#       user:
+#         name: mrkuta
+#         group: admin
+
+- name: Deploy app package
+  hosts: 34.79.224.214
+  tasks:
+    - name: Unpack package
+      unarchive:
+        src: /home/dankuta/deving/Nana/ansibling/ansproj1/teamable-app-0.1.1.tgz
+        dest: /home/dankuta/
+    - name: Install dependencies
+      npm:
+        path: /home/dankuta/package
+    - name: Start the NodeJS App
+      command:
+        chdir: /home/dankuta/package
+        cmd: node server
+      async: 1000
+      poll: 0
+    - name: Ensure app is running
+      shell: ps aux | grep node
+      register: app_status
+    - debug: msg={{app_status.stdout_lines}}
